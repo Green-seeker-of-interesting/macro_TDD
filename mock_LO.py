@@ -12,27 +12,26 @@ class ReportFile:
 
     def GetValue(self, file_name: str) -> tuple:
         try:
-            return self.GetValueWorker(file_name=file_name)
+            return self._getValueWorker(file_name=file_name)
         except FileNotFoundError as e:
-            lg.error(
-                f"Ошибка чтения данных. \n\t Файл - {file_name} не найдне \n\t {e}")
+            lg.warning(e, exc_info=True)
 
     def SetArray(self, sheet: str, arr: tuple):
         try:
-            self.writeArray(sheet, arr)
+            self._writeArray(sheet, arr)
         except Exception as e:
-            lg.error(f"Ошибка записи данных. \n\t Лис - {sheet} \n\t {str(e)}")
+            lg.warning(e, exc_info=True)
 
     def GetPath(self) -> str:
         return os.getcwd()
 
     # level 3
 
-    def GetValueWorker(self, file_name: str):
+    def _getValueWorker(self, file_name: str):
         df = pd.read_excel(file_name)
         return tuple(tuple(x) for x in df.values)
 
-    def writeArray(self, sheet_name: str, arr: tuple):
+    def _writeArray(self, sheet_name: str, arr: tuple):
         with open("sheets/" + sheet_name + ".txt", "w") as f:
             for row in arr:
                 f.write(",".join(map(str, row)) + "\n")
