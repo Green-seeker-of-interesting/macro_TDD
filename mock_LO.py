@@ -29,7 +29,10 @@ class ReportFile:
 
     def _getValueWorker(self, file_name: str):
         df = pd.read_excel(file_name)
-        return tuple(tuple(x) for x in df.values)
+        arr = [("Статистический показатель", "Количественные показатели")]
+        for i in df.values:
+            arr.append(i)
+        return tuple(tuple(x) for x in arr)
 
     def _writeArray(self, sheet_name: str, arr: tuple):
         with open("sheets/" + sheet_name + ".txt", "w") as f:

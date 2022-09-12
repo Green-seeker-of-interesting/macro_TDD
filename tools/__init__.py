@@ -1,1 +1,1 @@
-from .generator_file import generatorFileForTest
+from .generator_file import *
