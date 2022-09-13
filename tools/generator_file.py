@@ -20,7 +20,7 @@ def generatorFileForTest():
 def generatorDataForTest() -> tuple:
     main_mas = [
         ["Статистический показатель", "Количественные показатели"],
-        ["Категория", 0],
+        ["Категория", random.randint(0, 3)],
         ["Подразделение", random.choice(["ЦО", "ОТ", "КГ", "ПР"])]
     ]
 

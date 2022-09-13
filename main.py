@@ -1,5 +1,6 @@
 import logging as lg
 import os
+import shutil
 
 from mock_LO import ReportFile
 
@@ -47,8 +48,6 @@ class Validator:
 
 class InformationFile:
 
-    # level 2
-
     def __init__(self, name_file: str) -> None:
         self.name_file = name_file
         self._readFile()
@@ -63,8 +62,6 @@ class InformationFile:
 
     def giveValues(self) -> tuple:
         return self.values
-
-    # level 3
 
     def _readFile(self):
         reFile = ReportFile()
@@ -96,6 +93,7 @@ class DataCollector:
     def _getListAbsolutePathFiles(sef) -> list:
         path_to_dir =  ReportFile().GetPath()
         out = []
+        # TODO - Переписать на модуль os.path.join()
         for file in os.listdir(path_to_dir + "/Данные/"):
             out.append(path_to_dir + "/Данные/" + file)
         return out
@@ -104,10 +102,51 @@ class DataCollector:
         return list(filter(lambda x: x.endswith(".ods"),arr))
 
 
+class FileShifter:
+    
+    @classmethod
+    def shifting(cls, files:list):
+        cls.creationFolder(files)
+        cls._shifting(files)
+
+    @classmethod
+    def creationFolder(cls, files:list):
+        for name in cls._creationPathForNewDir(files):
+            cls._creationFolder(name)
+
+    @classmethod
+    def _shifting(cls ,files:list):
+        for file in files:
+            cls._shiftFile(file)
+
+    @classmethod    
+    def _shiftFile(cls,file:InformationFile):
+        shutil.copy(file.name_file, cls._generatorPath(file), follow_symlinks=False)
+
+    def _creationPathForNewDir(files:list) -> list:
+        out = []
+        out.append(os.path.join(ReportFile().GetPath(), "По категориям"))
+        for name in set([x.categories for x in files]):
+            out.append(os.path.join(out[0], str(name)))
+        return out
+
+    def _creationFolder(file_name):
+        try:
+            os.mkdir(file_name)
+        except OSError as e:
+            lg.info("Ошибка создния категории. Такая уже сущетвует")
+
+    def _generatorPath(item:InformationFile)->str:
+        work_path = ReportFile().GetPath()
+        return os.path.join(work_path, "По категориям",str(item.categories), os.path.basename(item.name_file))
+
+
+
 
 def START(args=None):
     try:
         infoFiles = DataCollector().fullDataCollection()
+        FileShifter.shifting(infoFiles)
         pass
     except KeyboardInterrupt:
         pass
