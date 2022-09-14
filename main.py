@@ -91,39 +91,40 @@ class DataCollector:
         return [x for x in arr if x.giveStatusValidation()]
 
     def _getListAbsolutePathFiles(sef) -> list:
-        path_to_dir =  ReportFile().GetPath()
+        path_to_dir = ReportFile().GetPath()
         out = []
         # TODO - Переписать на модуль os.path.join()
         for file in os.listdir(path_to_dir + "/Данные/"):
             out.append(path_to_dir + "/Данные/" + file)
         return out
-        
-    def _filerListByMarker(self, arr:list) -> list:
-        return list(filter(lambda x: x.endswith(".ods"),arr))
+
+    def _filerListByMarker(self, arr: list) -> list:
+        return list(filter(lambda x: x.endswith(".ods"), arr))
 
 
 class FileShifter:
-    
+
     @classmethod
-    def shifting(cls, files:list):
+    def shifting(cls, files: list):
         cls.creationFolder(files)
         cls._shifting(files)
 
     @classmethod
-    def creationFolder(cls, files:list):
+    def creationFolder(cls, files: list):
         for name in cls._creationPathForNewDir(files):
             cls._creationFolder(name)
 
     @classmethod
-    def _shifting(cls ,files:list):
+    def _shifting(cls, files: list):
         for file in files:
             cls._shiftFile(file)
 
-    @classmethod    
-    def _shiftFile(cls,file:InformationFile):
-        shutil.copy(file.name_file, cls._generatorPath(file), follow_symlinks=False)
+    @classmethod
+    def _shiftFile(cls, file: InformationFile):
+        shutil.copy(file.name_file, cls._generatorPath(
+            file), follow_symlinks=False)
 
-    def _creationPathForNewDir(files:list) -> list:
+    def _creationPathForNewDir(files: list) -> list:
         out = []
         out.append(os.path.join(ReportFile().GetPath(), "По категориям"))
         for name in set([x.categories for x in files]):
@@ -136,18 +137,104 @@ class FileShifter:
         except OSError as e:
             lg.info("Ошибка создния категории. Такая уже сущетвует")
 
-    def _generatorPath(item:InformationFile)->str:
+    def _generatorPath(item: InformationFile) -> str:
         work_path = ReportFile().GetPath()
-        return os.path.join(work_path, "По категориям",str(item.categories), os.path.basename(item.name_file))
+        return os.path.join(work_path, "По категориям", str(item.categories), os.path.basename(item.name_file))
 
 
+class Formater:
+    # класс для генерации отображения таблицы
+    pass
+
+
+class Table:
+
+    def __init__(self, arr: list) -> None:
+        self.raw_data = arr
+        self._columnsInit()
+        self._indexInit()
+
+        # Стоит вынести в отдельный воркер
+        self._createStatMatrix()
+        self._calculationStatsEstimate()
+        self._сalculationFinalGrade()
+
+    def getFullTableValue(self) -> list:
+        return self._rating(self._createWideTable())
+ 
+    def _createWideTable(self):
+        out = []
+        for row in range(len(self.index)):
+            out.append([])
+            for col in range(len(self.columns)):
+                out[row].append(self.stats_matrix[row][col]) 
+                out[row].append(self.estimate_matrix[row][col])
+            out[row].append(self.final_grade[row])
+        return out
+
+    def _rating(self, arr: list)->list:
+        sortArr = sorted(arr, key=lambda x:x[-1], reverse=True)
+        for i in range(len(sortArr)):
+            sortArr[i].append(i+1)
+        return sortArr
+
+    def _createStatMatrix(self):
+        self.stats_matrix = tuple(x.giveValues() for x in self.raw_data)
+
+    def _calculationStatsEstimate(self):
+        out = []
+        for i in range(len(self.columns)):
+            out.append(self._calculationPositiveEstimate(
+                self._giveSatatParams(i)))
+        self.estimate_matrix = self._T(out)
+
+    def _сalculationFinalGrade(self):
+        self.final_grade = tuple(round(sum(row) / len(row),2) for row in self.estimate_matrix)
+
+    def _giveSatatParams(self, col: int) -> tuple:
+        out = []
+        for i in range(len(self.index)):
+            out.append(self.stats_matrix[i][col])
+        return tuple(out)
+
+    def _calculationPositiveEstimate(self, colums: tuple) -> tuple:
+        maxSP = max(colums)
+        minSP = min(colums)
+        out = [((x - minSP) / (maxSP - minSP)) * 100 for x in colums]
+        return tuple(round(x, 2) for x in out)
+
+    def _columnsInit(self):
+        # TODO - Нужна ли валидация списка параметров?
+        self.columns = self.raw_data[0].giveIndex()
+
+    def _indexInit(self):
+        self.index = tuple(x.troop for x in self.raw_data)
+
+    def _T(self, matrix:tuple)->tuple:
+        return tuple(map(tuple, zip(*matrix)))
+
+
+class TableCreator:
+
+    def creatingTable(self, arr: list) -> list:
+        return [Table(x) for x in self._sortByCategory(arr)]
+
+    def _sortByCategory(self, arr: list) -> tuple:
+        tables = dict()
+        for item in arr:
+            if str(item.categories) in tables.keys():
+                tables[str(item.categories)].append(item)
+            else:
+                tables.update({str(item.categories): [item]})
+        return tuple(tables[key] for key in tables.keys())
 
 
 def START(args=None):
     try:
         infoFiles = DataCollector().fullDataCollection()
         FileShifter.shifting(infoFiles)
-        pass
+        tables = TableCreator().creatingTable(infoFiles)
+
     except KeyboardInterrupt:
         pass
 
