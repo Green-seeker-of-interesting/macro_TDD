@@ -1,4 +1,5 @@
 import random
+import os
 
 import pandas as pd
 
@@ -13,9 +14,13 @@ def generatorFileForTest():
     
     df = pd.DataFrame(main_mas, columns=["Статистический показатель", "Количественные показатели"])
     df = df.set_index("Статистический показатель")
+    createDirIfNotExses("testData")
     df.to_excel("testData/" + "testData" + ".ods" )
 
 
+def createDirIfNotExses(name:str):
+    if not name in os.listdir():
+        os.mkdir(name)
 
 def generatorDataForTest() -> tuple:
     main_mas = [

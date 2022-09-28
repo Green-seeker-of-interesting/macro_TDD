@@ -142,11 +142,6 @@ class FileShifter:
         return os.path.join(work_path, "По категориям", str(item.categories), os.path.basename(item.name_file))
 
 
-class Formater:
-    # класс для генерации отображения таблицы
-    pass
-
-
 class Table:
 
     def __init__(self, arr: list) -> None:
@@ -227,6 +222,12 @@ class TableCreator:
             else:
                 tables.update({str(item.categories): [item]})
         return tuple(tables[key] for key in tables.keys())
+
+
+class Formater:
+    # класс для генерации отображения таблицы
+    pass
+
 
 
 def START(args=None):

@@ -16,9 +16,9 @@ class ReportFile:
         except FileNotFoundError as e:
             lg.warning(e, exc_info=True)
 
-    def SetArray(self, sheet: str, arr: tuple):
+    def SetArray(self, target: str, arr: tuple):
         try:
-            self._writeArray(sheet, arr)
+            self._writeArray(target, arr)
         except Exception as e:
             lg.warning(e, exc_info=True)
 

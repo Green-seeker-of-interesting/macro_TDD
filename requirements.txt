@@ -1,0 +1,12 @@
+defusedxml==0.7.1
+Faker==15.0.0
+numpy==1.21.6
+odfpy==1.4.1
+pandas==1.3.5
+python-dateutil==2.8.2
+pytz==2022.2.1
+six==1.16.0
+types-scriptforge==1.1.2
+types-uno-script==0.1.1
+types-unopy==0.4.7
+typing_extensions==4.3.0

@@ -3,7 +3,7 @@ import os
 
 
 from main import *
-from tools import generatorFileForTest, generatorDataForTest
+from tools import generatorFileForTest
 
 
 class TestDataShifter(unittest.TestCase):
