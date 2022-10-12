@@ -1,6 +1,7 @@
 from scriptforge import CreateScriptService
 
-class ReportFile:   
+
+class ReportFile:
 
     def __init__(self) -> None:
         self.calc = CreateScriptService("Calc")
@@ -17,11 +18,19 @@ class ReportFile:
         self.calc.RemoveSheet("value")
         return out_array
 
-    def SetArray(self, target: str, arr: tuple):
-        self.calc.SetArray(target,value=arr)
+    def SetArray(self, sheet: str, target: str, arr: tuple):
+        if not sheet in self.calc.Sheets:
+            self.calc.InsertSheet(sheet)
+        self.calc.SetArray(".".join([sheet, target]), value=arr)
 
     def GetPath(self) -> str:
         return self.FSO.GetParentFolderName(filename=self.ui.Documents()[0])
 
-    def mesege(self, msg:str):
+    def SetLine(self, arr: list, sheet: str, target: str, step: int = 0) -> None:
+        self.calc.Activate(sheet)
+        for i, val in enumerate(arr):
+            self.calc.SetValue(self.calc.Offset(
+                target, 0, i*(step+1)), str(val))
+
+    def mesege(self, msg: str):
         self.svc.MsgBox(str(msg))
