@@ -3,6 +3,7 @@ import os
 import shutil
 import typing as tp
 
+from scriptforge import CreateScriptService
 from mock_LO import ReportFile
 
 
@@ -158,7 +159,7 @@ class Table:
         self._indexInit()
         self._calculation()
 
-    def getFullTableValue(self) -> list:
+    def getFullTableValue(self) -> tp.List[list]:
         return self._rating(self._createWideTable())
 
     def _columnsInit(self):
@@ -221,15 +222,13 @@ class Table:
         return tuple(map(tuple, zip(*matrix)))
 
 
-
-# пауза в тайпинге
 class TableCreator:
 
-    def creatingTable(self, arr: list) -> list:
+    def creatingTable(self, arr: tp.List[InformationFile]) -> tp.List[Table]:
         return [Table(x) for x in self._sortByCategory(arr)]
 
-    def _sortByCategory(self, arr: list) -> tuple:
-        tables = dict()
+    def _sortByCategory(self, arr: tp.List[InformationFile]) -> tp.Tuple[tp.List[InformationFile]]:
+        tables: tp.Dict[str, tp.List[InformationFile]] = dict()
         for item in arr:
             if str(item.categories) in tables.keys():
                 tables[str(item.categories)].append(item)
@@ -243,7 +242,7 @@ class TableRecordManager:
     def __init__(self):
         self.rFile = ReportFile()
 
-    def recordTables(self, tables: list):
+    def recordTables(self, tables: tp.List[Table]):
         for table in tables:
             self.record(table)
 
@@ -253,7 +252,7 @@ class TableRecordManager:
         self._recordHeder(table)
 
     def _recordHeder(self, table: Table):
-        sp = []
+        sp: tp.List[str] = []
         for i, _ in enumerate(table.columns):
             sp.append("СП " + str(i+1))
             sp.append("ОП " + str(i+1))
@@ -287,8 +286,45 @@ class TableRecordManager:
 
 
 class Formater:
-    # класс для генерации отображения таблицы
-    pass
+
+    def __init__(self) -> None:
+        self.calc = CreateScriptService("Calc")
+    
+    def formaterManager(self, tables: tp.List[Table]) -> None:
+        for table in tables:
+            self.calc.Activate(table.name)
+            self._coloringTable(table)
+            # self._createChart(table)
+
+    def _coloringTable(self, table: Table):
+        self._hederArt(table)
+        self._indexArt(table)
+        self._columsArt(table)
+
+    def _createChart(self, table: Table):
+        target = "A1:A" + str(len(table.index) + 2)
+        self.calc.CreateChart(
+            chartname="tables",
+            sheetname=table.name,
+            range=self.calc.Offset(target, 0, (len(table.columns) * 2 ) + 2)
+        )
+
+    def _indexArt(self, table:Table):
+        target = "A1:A" + str(len(table.index) + 2)
+        self.calc.SetCellStyle(target, "hed_and_index")
+
+    def _columsArt(self, table: Table):
+        target = "B2:B" + str(len(table.index) + 2)
+        for ind, _ in enumerate(table.columns):
+            self.calc.SetCellStyle(self.calc.Offset(target, 0, ind*2), "col1")
+            self.calc.SetCellStyle(self.calc.Offset(target, 0, (ind*2) + 1), "col2")
+
+    def _hederArt(self, table: Table):
+        target = "A1:" + self._getLastColumnName() + "1"
+        self.calc.SetCellStyle(target, "hed_and_index")
+    
+    def _getLastColumnName(self) -> str:
+        return self.calc.LastCell('*').split("$")[2]
 
 
 def START(args=None):
@@ -297,6 +333,7 @@ def START(args=None):
         FileShifter.shifting(infoFiles)
         tables = TableCreator().creatingTable(infoFiles)
         TableRecordManager().recordTables(tables)
+        Formater().formaterManager(tables)
     except KeyboardInterrupt:
         pass
 

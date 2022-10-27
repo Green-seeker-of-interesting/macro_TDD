@@ -26,6 +26,7 @@ class ReportFile:
     def GetPath(self) -> str:
         return self.FSO.GetParentFolderName(filename=self.ui.Documents()[0])
 
+    # некрасивая функция, слищком много входных параметров
     def SetLine(self, arr: list, sheet: str, target: str, step: int = 0) -> None:
         self.calc.Activate(sheet)
         for i, val in enumerate(arr):
